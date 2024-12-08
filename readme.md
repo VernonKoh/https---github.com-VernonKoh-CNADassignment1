@@ -1,52 +1,69 @@
-Vehicle Rental Microservices Architecture
-This project is designed using Microservices Architecture to manage a vehicle rental system. The system is split into distinct services to ensure scalability, maintainability, and independent deployment. The architecture supports user management, vehicle reservation, billing and payment processing, and real-time communication between services.
+# Vehicle Rental Microservices Architecture
 
-Table of Contents
-4.1.3.1 Design Considerations of the Microservices
-4.1.3.2 Architecture Diagram
-4.1.3.3 Instructions for Setting Up and Running Microservices
-Why Microservices Architecture?
-4.1.3.1 Design Considerations of the Microservices
-1. Service Decomposition
-The system is decomposed into distinct services that handle specific parts of the vehicle rental process. Each service operates independently and interacts with others via RESTful APIs.
+This project is designed using **Microservices Architecture** to manage a vehicle rental system. The system is split into distinct services to ensure scalability, maintainability, and independent deployment. The architecture supports user management, vehicle reservation, billing and payment processing, and real-time communication between services.
 
-User Service:
-Manages user registration, authentication, membership tiers, and profile management.
-Users can register via email or phone, manage their membership levels (Basic, Premium, VIP), and track their rental history.
-Vehicle Service:
-Handles vehicle availability, booking, modification, and cancellation.
-Users can view available vehicles in real-time, make reservations, and modify/cancel them.
-Billing Service:
-Handles real-time cost calculations based on membership tiers and rental duration.
-Includes payment processing via secure methods, invoice generation, and email receipts.
-By splitting the system into these services, we achieve scalability and maintainability:
+---
 
-Scalability: Individual services can be scaled based on the load. For instance, the Billing Service can be scaled independently during peak times without affecting other services.
-Maintainability: Each service has a single responsibility, making it easier to update or maintain a specific part of the system without impacting others.
-2. Inter-Service Communication
-Services communicate using RESTful APIs with clear API contracts. This is implemented with HTTP methods like GET, POST, PUT, and DELETE, ensuring that the system is loosely coupled and easy to integrate with the frontend or other services.
+## Table of Contents
+1. [Design Considerations of the Microservices](#design-considerations)
+2. [Architecture Diagram](#architecture-diagram)
+3. [Instructions for Setting Up and Running Microservices](#setup-instructions)
+4. [Why Microservices Architecture?](#why-microservices)
 
-User Service API: Manages user-related endpoints like /api/v1/users/register for user registration and /api/v1/users/login for authentication.
-Vehicle Service API: Provides endpoints for vehicle operations like /api/v1/vehicles for viewing and reserving vehicles.
-Billing Service API: Handles payment processing and invoice generation with endpoints like /api/v1/payment/confirm.
-By using RESTful APIs, the services are decoupled and can evolve independently, making the system more flexible and reducing the impact of changes.
+---
 
-3. Database Per Service
+## Design Considerations of the Microservices
+
+### 1. Service Decomposition
+
+The system is decomposed into distinct services that handle specific parts of the vehicle rental process. Each service operates independently and interacts with others via **RESTful APIs**.
+
+- **User Service**:
+  - Manages user registration, authentication, membership tiers, and profile management.
+  - Users can register via email or phone, manage their membership levels (Basic, Premium, VIP), and track their rental history.
+
+- **Vehicle Service**:
+  - Handles vehicle availability, booking, modification, and cancellation.
+  - Users can view available vehicles in real-time, make reservations, and modify/cancel them.
+
+- **Billing Service**:
+  - Handles real-time cost calculations based on membership tiers and rental duration.
+  - Includes payment processing via secure methods, invoice generation, and email receipts.
+
+**Benefits of Service Decomposition**:
+- **Scalability**: Individual services can be scaled based on the load. For instance, the **Billing Service** can be scaled independently during peak times without affecting other services.
+- **Maintainability**: Each service has a single responsibility, making it easier to update or maintain a specific part of the system without impacting others.
+
+### 2. Inter-Service Communication
+
+Services communicate using **RESTful APIs** with clear API contracts. This is implemented with HTTP methods like `GET`, `POST`, `PUT`, and `DELETE`, ensuring that the system is loosely coupled and easy to integrate with the frontend or other services.
+
+- **User Service API**: Manages user-related endpoints like `/api/v1/users/register` for user registration and `/api/v1/users/login` for authentication.
+- **Vehicle Service API**: Provides endpoints for vehicle operations like `/api/v1/vehicles` for viewing and reserving vehicles.
+- **Billing Service API**: Handles payment processing and invoice generation with endpoints like `/api/v1/payment/confirm`.
+
+By using **RESTful APIs**, the services are decoupled and can evolve independently, making the system more flexible and reducing the impact of changes.
+
+### 3. Database Per Service
+
 Each service manages its own database, ensuring complete data isolation. For example:
+- **User Service** stores user data, including registration, profiles, and membership tiers.
+- **Vehicle Service** stores vehicle details, availability, and booking information.
+- **Billing Service** stores transaction details, payment status, and invoices.
 
-User Service stores user data, including registration, profiles, and membership tiers.
-Vehicle Service stores vehicle details, availability, and booking information.
-Billing Service stores transaction details, payment status, and invoices.
 This separation of data ensures that each service is responsible for its own domain, preventing data leakage and improving fault tolerance.
 
-4. Error Handling and Logging
+### 4. Error Handling and Logging
+
 Each service includes robust error handling. Errors are logged with detailed messages to assist in debugging. Services return meaningful HTTP responses with appropriate error codes (e.g., 400 for invalid input, 500 for server errors). Logs are collected for monitoring and troubleshooting purposes.
 
-4.1.3.2 Architecture Diagram
+---
+
+## Architecture Diagram
+
 Below is the architecture diagram for the Vehicle Rental System. It illustrates the microservices and their communication through RESTful APIs.
 
-plaintext
-Copy code
+```plaintext
                              +------------------+
                              |   User Service   |
                              | (Authentication, |
