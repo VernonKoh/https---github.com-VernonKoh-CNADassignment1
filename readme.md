@@ -87,7 +87,11 @@ Below is the architecture diagram for the Vehicle Rental System. It illustrates 
     |  Database      |                                     |  Database       |
     |  (User Data)   |                                     |  (Vehicle Data) |
     +----------------+                                     +-----------------+
-This diagram highlights:
+
+
+
+```
+## This diagram highlights:
 
 Service Decomposition: Each service is self-contained with its own database.
 Loose Coupling: Services interact via RESTful APIs, ensuring minimal dependencies.
@@ -97,12 +101,12 @@ Prerequisites:
 Install Go version 1.16 or higher.
 Install Docker if you plan to containerize the services.
 Install a relational database like PostgreSQL or MySQL to run the services.
-1. Clone the Repository
+## 1. Clone the Repository
 bash
 Copy code
 git clone https://github.com/your-repo/vehicle-rental-system.git
 cd vehicle-rental-system
-2. Configure Environment Variables
+## 2. Configure Environment Variables
 Create a .env file to define the necessary environment variables for the services:
 
 bash
@@ -115,16 +119,16 @@ DB_PORT=5432
 DB_USER=your-db-user
 DB_PASSWORD=your-db-password
 DB_NAME=vehicle_rental_db
-3. Run the Database
+## 3. Run the Database
 Use Docker to set up a PostgreSQL or MySQL database, or configure it locally.
 Run the following Docker command to set up a PostgreSQL container (for example):
 bash
 Copy code
 docker run --name vehicle_rental_db -e POSTGRES_PASSWORD=yourpassword -p 5432:5432 -d postgres
-4. Database Setup
+## 4. Database Setup
 Run the database migrations for each service to create the necessary tables. You can use a tool like Go Migrations for this purpose.
 
-5. Run the Services
+## 5. Run the Services
 User Service:
 
 bash
@@ -149,14 +153,14 @@ User Service: http://localhost:8081
 Vehicle Service: http://localhost:8082
 Billing Service: http://localhost:8083
 
-6. Test the Services
+## 6. Test the Services
 You can now test the services by interacting with the endpoints:
 
 User Service: POST /api/v1/users/register for registration and POST /api/v1/users/login for authentication.
 Vehicle Service: GET /api/v1/vehicles to view vehicle availability and POST /api/v1/vehicles/book to make bookings.
 Billing Service: POST /api/v1/payment/confirm to confirm payments and generate invoices.
 
-Why Microservices Architecture?
+## Why Microservices Architecture?
 1. Scalability
 Microservices can be independently scaled, so each service can handle varying loads. For example, the Billing Service can be scaled more during high traffic periods (e.g., during sale seasons) without affecting the Vehicle Service or User Service.
 
