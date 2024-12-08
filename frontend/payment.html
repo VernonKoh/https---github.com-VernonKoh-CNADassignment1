@@ -90,12 +90,12 @@
         const userID = localStorage.getItem('userID');
         const jwtToken = localStorage.getItem('jwtToken');
         let totalAmount = 0;
-
+    
         if (!userID || !jwtToken) {
             alert('User not logged in!');
             window.location.href = 'login.html';
         }
-
+    
         // Fetch billing details
         async function fetchBillingDetails() {
             try {
@@ -104,20 +104,20 @@
                         Authorization: `Bearer ${jwtToken}`
                     }
                 });
-
+    
                 const responseBody = await response.text();
                 console.log("Raw Response Body:", responseBody);
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP Status: ${response.status} - ${responseBody}`);
                 }
-
+    
                 const data = JSON.parse(responseBody);
-
+    
                 if (data.billing_details) {
                     totalAmount = data.total_cost;
                     document.getElementById('paymentAmount').value = `$${totalAmount.toFixed(2)}`;
-
+    
                     const billingDetailsDiv = document.getElementById('billing-details');
                     const table = document.createElement('table');
                     table.classList.add('table', 'billing-table');
@@ -135,7 +135,7 @@
                         </thead>
                         <tbody>
                     `;
-
+    
                     data.billing_details.forEach(booking => {
                         tableHTML += `
                             <tr>
@@ -149,7 +149,7 @@
                             </tr>
                         `;
                     });
-
+    
                     tableHTML += `</tbody>`;
                     table.innerHTML = tableHTML;
                     billingDetailsDiv.innerHTML = '';
@@ -162,7 +162,7 @@
                 document.getElementById('billing-details').innerHTML = '<p>Failed to load billing details. Please try again later.</p>';
             }
         }
-
+    
         // Handle Stripe checkout
         async function createCheckoutSession() {
             const response = await fetch('http://localhost:8083/api/v1/payment/create-checkout-session', {
@@ -173,22 +173,22 @@
                 },
                 body: JSON.stringify({ amount: totalAmount * 100 }) // Convert to cents
             });
-
+    
             const session = await response.json();
             return session.id;
         }
-
+    
         document.getElementById('checkout-button').addEventListener('click', async () => {
             const sessionId = await createCheckoutSession();
-
+    
             const stripe = Stripe('your-public-stripe-key');
             const { error } = await stripe.redirectToCheckout({ sessionId });
-
+    
             if (error) {
                 console.error('Error during checkout:', error);
             }
         });
-
+    
         // Fetch billing details on page load
         fetchBillingDetails();
     </script>

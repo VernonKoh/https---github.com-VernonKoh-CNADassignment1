@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"cnad_assignment/billing-service/database"
 	"cnad_assignment/billing-service/utils"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,142 +16,59 @@ type User struct {
 	Role string `json:"role"`
 }
 
-// FetchBillingDetails fetches the booking details from the vehicle-service via HTTP
+// FetchBillingDetails fetches the billing details for a user including booking and vehicle details
 func FetchBillingDetails(w http.ResponseWriter, r *http.Request) {
-	// Extract user ID from URL query
 	userIDStr := r.URL.Query().Get("user_id")
 	if userIDStr == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
 
-	// Convert user ID to integer
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	// Fetch bookings from the vehicle service
-	resp, err := http.Get(fmt.Sprintf("http://localhost:8082/api/v1/bookings?user_id=%d", userID))
+	// Fetch the bookings and vehicle details for the user
+	bookings, err := database.FetchBookingsByUser(userID)
 	if err != nil {
-		log.Printf("Error fetching booking details: %v", err)
-		http.Error(w, fmt.Sprintf("Error fetching booking details from vehicle service: %v", err), http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Check for non-200 responses
-	if resp.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("Vehicle service returned error: %s", resp.Status), resp.StatusCode)
+		http.Error(w, fmt.Sprintf("Error fetching bookings: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Parse booking data
-	var bookings []struct {
-		ID        int       `json:"id"`
-		UserID    int       `json:"user_id"`
-		VehicleID int       `json:"vehicle_id"`
-		StartTime time.Time `json:"start_time"`
-		EndTime   time.Time `json:"end_time"`
-		Status    string    `json:"status"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&bookings); err != nil {
-		log.Printf("Error decoding booking details: %v", err)
-		http.Error(w, "Error decoding booking details", http.StatusInternalServerError)
-		return
-	}
-
-	// Fetch user details (role: Premium, VIP)
-	userResp, err := http.Get(fmt.Sprintf("http://localhost:8081/api/v1/users/%d", userID))
-	if err != nil {
-		log.Printf("Error fetching user details: %v", err)
-		http.Error(w, fmt.Sprintf("Error fetching user details: %v", err), http.StatusInternalServerError)
-		return
-	}
-	defer userResp.Body.Close()
-
-	// Check user response
-	if userResp.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("User service returned error: %s", userResp.Status), userResp.StatusCode)
-		return
-	}
-
-	var userRole struct {
-		Role string `json:"role"`
-	}
-	if err := json.NewDecoder(userResp.Body).Decode(&userRole); err != nil {
-		log.Printf("Error decoding user details: %v", err)
-		http.Error(w, "Error decoding user details", http.StatusInternalServerError)
-		return
-	}
-
-	// Process each booking and calculate costs
+	// Calculate total cost and gather billing details
 	var totalCost float64
 	var billingDetails []map[string]interface{}
 
+	// Process each booking
 	for _, booking := range bookings {
-		// Calculate the duration of the booking in hours
-		duration := booking.EndTime.Sub(booking.StartTime).Hours()
+		// Get the vehicle details
+		vehicle := fmt.Sprintf("%s %s (%s)", booking["make"], booking["model"], booking["registration_number"])
 
-		// Calculate the cost before discount
-		cost, err := utils.CalculateBilling(booking.UserID, booking.StartTime, booking.EndTime)
+		// Calculate the cost for the booking
+		cost, err := utils.CalculateBilling(userID, booking["start_time"].(time.Time), booking["end_time"].(time.Time))
 		if err != nil {
-			log.Printf("Error calculating billing for booking %d: %v", booking.ID, err)
-			http.Error(w, fmt.Sprintf("Error calculating billing for booking %d: %v", booking.ID, err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error calculating billing: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Apply discount based on membership
-		discount := 0.0
-		if userRole.Role == "Premium" {
-			discount = 0.10 // 10% discount for Premium
-		} else if userRole.Role == "VIP" {
-			discount = 0.20 // 20% discount for VIP
-		}
-
-		// Calculate the final price after discount
-		finalCost := cost * (1 - discount)
-
-		// Fetch vehicle details
-		vehicleResp, err := http.Get(fmt.Sprintf("http://localhost:8082/api/v1/vehicles/%d", booking.VehicleID))
-		if err != nil {
-			log.Printf("Error fetching vehicle details for booking %d: %v", booking.ID, err)
-			http.Error(w, fmt.Sprintf("Error fetching vehicle details for booking %d: %v", booking.ID, err), http.StatusInternalServerError)
-			return
-		}
-		defer vehicleResp.Body.Close()
-
-		var vehicle struct {
-			Make               string `json:"make"`
-			Model              string `json:"model"`
-			RegistrationNumber string `json:"registration_number"`
-		}
-		if err := json.NewDecoder(vehicleResp.Body).Decode(&vehicle); err != nil {
-			log.Printf("Error decoding vehicle details for booking %d: %v", booking.ID, err)
-			http.Error(w, fmt.Sprintf("Error decoding vehicle details for booking %d: %v", booking.ID, err), http.StatusInternalServerError)
-			return
-		}
-
-		// Add the booking details to the response
+		// Add the billing details for each booking to the response
 		billingDetails = append(billingDetails, map[string]interface{}{
-			"vehicle":              fmt.Sprintf("%s %s (%s)", vehicle.Make, vehicle.Model, vehicle.RegistrationNumber),
-			"start_time":           booking.StartTime.Format("2006-01-02 15:04:05"),
-			"end_time":             booking.EndTime.Format("2006-01-02 15:04:05"),
-			"duration":             fmt.Sprintf("%.2f hours", duration),
+			"vehicle":              vehicle,
+			"start_time":           booking["start_time"],
+			"end_time":             booking["end_time"],
+			"duration":             booking["end_time"].(time.Time).Sub(booking["start_time"].(time.Time)).Hours(),
 			"cost_before_discount": fmt.Sprintf("$%.2f", cost),
-			"discount":             fmt.Sprintf("%.2f%%", discount*100),
-			"final_cost":           fmt.Sprintf("$%.2f", finalCost),
+			"discount":             booking["discount"],
+			"final_cost":           fmt.Sprintf("$%.2f", cost),
 		})
 
-		totalCost += finalCost
+		// Add the cost to the total cost
+		totalCost += cost
 	}
 
-	// Log the billing details for debugging purposes
-	log.Printf("Billing details: %+v", billingDetails)
-
-	// Respond with the total cost and detailed billing information
+	// Respond with the total cost and billing details
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"total_cost":      totalCost,
