@@ -28,6 +28,10 @@
         .billing-table td {
             text-align: left;
         }
+
+        .membership-info {
+            margin-bottom: 30px;
+        }
     </style>
 </head>
 
@@ -60,6 +64,12 @@
     <div class="container">
         <h1>Vehicle Billing and Payment</h1>
 
+        <!-- Membership Tier and Discount Info -->
+        <div id="membership-info" class="membership-info">
+            <p>Membership Tier: <span id="membership-tier">Loading...</span></p>
+            <p>Discount Applied: <span id="discount-amount">Loading...</span></p>
+        </div>
+
         <!-- Billing Details -->
         <div id="billing-details">
             <p>Loading billing details...</p>
@@ -78,6 +88,8 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Pay Now</button>
         </form>
+        
+
 
         <!-- Stripe Checkout -->
         <div id="stripe-checkout">
@@ -90,12 +102,12 @@
         const userID = localStorage.getItem('userID');
         const jwtToken = localStorage.getItem('jwtToken');
         let totalAmount = 0;
-    
+
         if (!userID || !jwtToken) {
             alert('User not logged in!');
             window.location.href = 'login.html';
         }
-    
+
         // Fetch billing details
         async function fetchBillingDetails() {
             try {
@@ -104,20 +116,24 @@
                         Authorization: `Bearer ${jwtToken}`
                     }
                 });
-    
+
                 const responseBody = await response.text();
                 console.log("Raw Response Body:", responseBody);
-    
+
                 if (!response.ok) {
                     throw new Error(`HTTP Status: ${response.status} - ${responseBody}`);
                 }
-    
+
                 const data = JSON.parse(responseBody);
-    
+
                 if (data.billing_details) {
                     totalAmount = data.total_cost;
                     document.getElementById('paymentAmount').value = `$${totalAmount.toFixed(2)}`;
-    
+
+                    // Display membership tier and discount
+                    document.getElementById('membership-tier').textContent = data.user_role;
+                    document.getElementById('discount-amount').textContent = data.discount;
+
                     const billingDetailsDiv = document.getElementById('billing-details');
                     const table = document.createElement('table');
                     table.classList.add('table', 'billing-table');
@@ -135,7 +151,7 @@
                         </thead>
                         <tbody>
                     `;
-    
+
                     data.billing_details.forEach(booking => {
                         tableHTML += `
                             <tr>
@@ -149,7 +165,7 @@
                             </tr>
                         `;
                     });
-    
+
                     tableHTML += `</tbody>`;
                     table.innerHTML = tableHTML;
                     billingDetailsDiv.innerHTML = '';
@@ -162,7 +178,7 @@
                 document.getElementById('billing-details').innerHTML = '<p>Failed to load billing details. Please try again later.</p>';
             }
         }
-    
+
         // Handle Stripe checkout
         async function createCheckoutSession() {
             const response = await fetch('http://localhost:8083/api/v1/payment/create-checkout-session', {
@@ -173,22 +189,66 @@
                 },
                 body: JSON.stringify({ amount: totalAmount * 100 }) // Convert to cents
             });
-    
+
             const session = await response.json();
             return session.id;
         }
-    
+
         document.getElementById('checkout-button').addEventListener('click', async () => {
             const sessionId = await createCheckoutSession();
-    
+
             const stripe = Stripe('your-public-stripe-key');
             const { error } = await stripe.redirectToCheckout({ sessionId });
-    
+
             if (error) {
                 console.error('Error during checkout:', error);
             }
         });
-    
+        document.getElementById('payment-form').addEventListener('submit', async function (e) {
+        e.preventDefault(); // Prevent form from submitting normally
+
+        // Get payment amount and user id
+        const paymentAmount = document.getElementById('paymentAmount').value;
+        const userID = localStorage.getItem('userID');
+        const jwtToken = localStorage.getItem('jwtToken');
+
+        if (!userID || !jwtToken) {
+            alert('User not logged in!');
+            window.location.href = 'login.html'; // Redirect if not logged in
+            return;
+        }
+
+        const paymentData = {
+            user_id: userID,
+            amount: paymentAmount,
+            payment_method: "Stripe", // Assuming using Stripe
+            payment_status: "pending", // Can be changed based on Stripe's response
+        };
+
+        try {
+            const response = await fetch('http://localhost:8083/api/v1/payment/confirm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwtToken}`, // Ensure you are passing the JWT token
+                },
+                body: JSON.stringify(paymentData), // Sending payment details to backend
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // If payment confirmed
+                alert("Payment confirmed!");
+                window.location.href = '/payment-confirmed.html'; // Redirect to payment confirmation page
+            } else {
+                alert(`Payment failed: ${result.error || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error("Error during payment:", error);
+            alert("Failed to process payment. Please try again.");
+        }
+    });
         // Fetch billing details on page load
         fetchBillingDetails();
     </script>

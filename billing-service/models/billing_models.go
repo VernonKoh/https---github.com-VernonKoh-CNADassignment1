@@ -10,6 +10,7 @@ type Payment struct {
 	PaymentMethod string    `json:"payment_method"`
 	PaymentStatus string    `json:"payment_status"`
 	PaymentDate   time.Time `json:"payment_date"`
+	BookingID     int       `json:"booking_id"` // Add BookingID here
 }
 
 // Invoice represents an invoice generated for a booking.

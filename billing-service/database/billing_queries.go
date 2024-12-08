@@ -1,9 +1,6 @@
 package database
 
 import (
-	"cnad_assignment/vehicle-service/models"
-	"database/sql"
-	"fmt"
 	"log"
 	"time"
 )
@@ -33,23 +30,23 @@ func FetchBookingsByUser(userID int) ([]map[string]interface{}, error) {
 	var bookings []map[string]interface{}
 	for rows.Next() {
 		var bookingID, userID int
-		var startTime, endTime, status, make, model, registrationNumber string
+		var startTimeStr, endTimeStr, status, make, model, registrationNumber string
 
 		// Scan the result into variables
-		err := rows.Scan(&bookingID, &userID, &startTime, &endTime, &status, &make, &model, &registrationNumber)
+		err := rows.Scan(&bookingID, &userID, &startTimeStr, &endTimeStr, &status, &make, &model, &registrationNumber)
 		if err != nil {
 			log.Printf("Error scanning row: %v", err)
 			return nil, err
 		}
 
-		// Use time.RFC3339 to parse times with timezone offsets
-		startTimeParsed, err := time.Parse(time.RFC3339, startTime)
+		// Parse the start_time and end_time from string to time.Time
+		startTime, err := time.Parse(time.RFC3339, startTimeStr)
 		if err != nil {
 			log.Printf("Error parsing start time: %v", err)
 			return nil, err
 		}
 
-		endTimeParsed, err := time.Parse(time.RFC3339, endTime)
+		endTime, err := time.Parse(time.RFC3339, endTimeStr)
 		if err != nil {
 			log.Printf("Error parsing end time: %v", err)
 			return nil, err
@@ -59,8 +56,8 @@ func FetchBookingsByUser(userID int) ([]map[string]interface{}, error) {
 		bookings = append(bookings, map[string]interface{}{
 			"booking_id":          bookingID,
 			"user_id":             userID,
-			"start_time":          startTimeParsed,
-			"end_time":            endTimeParsed,
+			"start_time":          startTime,
+			"end_time":            endTime,
 			"status":              status,
 			"make":                make,
 			"model":               model,
@@ -73,19 +70,4 @@ func FetchBookingsByUser(userID int) ([]map[string]interface{}, error) {
 	}
 
 	return bookings, nil
-}
-
-// FetchVehicleDetails fetches the vehicle details based on vehicleID
-func FetchVehicleDetails(vehicleID int) (models.Vehicle, error) {
-	var vehicle models.Vehicle
-	query := "SELECT make, model, registration_number FROM vehicles WHERE id = ?"
-	err := DB.QueryRow(query, vehicleID).Scan(&vehicle.Make, &vehicle.Model, &vehicle.RegistrationNumber)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return vehicle, fmt.Errorf("no vehicle found with id %d", vehicleID)
-		}
-		log.Printf("Error fetching vehicle details: %v", err)
-		return vehicle, err
-	}
-	return vehicle, nil
 }
