@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>Uler - Car Sharing</title>
+    <link rel="shortcut icon" href="/assets/favicon.ico">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.0/css/bootstrap.min.css">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+
+
+        .jwt-token {
+            word-wrap: break-word;
+            font-size: 16px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        * {
+            font-family: 'Poppins';
+            margin: 0;
+            padding: 0;
+            scroll-padding-top: 1rem;
+            scroll-behavior: smooth;
+            list-style: none;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        /* -------------------- Global variable for the colors -------------------- */
+        :root {
+            --main-color: red;
+            --text-color: black;
+            --bg-color: #fff;
+            --yellow: #f9d806;
+            --light-yellow: #ffee80;
+            --black: #130f40;
+            --light-color: #666;
+            --box-shadow: 0 .5rem 1rem rgba(0,0,0,.1);
+            --border: .1rem solid rgba(0,0,0,.1);
+            --color-primary: #009579;
+            --color-primary-dark: #007f67;
+            --color-secondary: #252c6a;
+            --color-error: #cc3333;
+            --color-success: #4bb544;
+            --pink: #e84393;
+            --border-radius: 4px;
+            --green: #27ae60;
+            --dark-color: #219150;
+            --black: #444;
+            --light-color: #666;
+            --border-hover: .1rem solid var(--black);
+        }
+
+        html {
+            font-size: 86.5%;
+            scroll-behavior: smooth;
+            scroll-padding-top: 6rem;
+            overflow-x: hidden;
+        }
+
+        section {
+            padding: 2rem 9%;
+        }
+
+        img {
+            width: 100%;
+        }
+
+        body {
+            color: var(--text-color);
+        }
+
+        .container {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .heading {
+            text-align: center;
+            font-size: 4rem;
+            color: #333;
+            padding: 1rem;
+            margin: 2rem 0;
+            background: rgba(255, 51, 153,.05);
+        }
+
+            .heading span {
+                color: var(--pink);
+            }
+
+        header {
+            display: block;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+            header.shadow {
+                background: black;
+                box-shadow: 2px 4px 4px rgb(15 54 55 /20%);
+                transition: 1.5s;
+            }
+        /* -------------------- END -------------------- */
+
+        /* -------------------- Nav bar -------------------- */
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 35px;
+        }
+
+        #menu-icon {
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            display: none;
+        }
+
+
+        .logo {
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+            .logo span {
+                color: var(--main-color);
+            }
+
+        .navbar {
+            display: flex;
+            column-gap: 2rem;
+        }
+
+            .navbar a {
+                color: white;
+                font-size: 1.2rem;
+                text-transform: uppercase;
+                font-weight: 500;
+            }
+
+                .navbar a:hover,
+                .navbar .active {
+                    color: var(--main-color);
+                    border-bottom: 3px solid var(--main-color);
+                }
+        /* -------------------- END -------------------- */
+        .login-register {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .login-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+            .login-popup h2 {
+                margin-top: 0;
+                margin-bottom: 20px;
+            }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+
+        /* -------------------- Homepage Banner -------------------- */
+        .home {
+            margin: auto;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            background: url(https://images.pexels.com/photos/8425035/pexels-photo-8425035.jpeg?auto=compress&cs=tinysrgb&w=1920) ;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center left;
+        }
+
+        .home-text {
+            padding-left: 30px;
+            color: whitesmoke;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1.0); /* White shadow with alpha value 0.8 */
+            font-weight: bold;
+            /*transform: scale(1.1);*/
+        }
+
+        .hometext h1 {
+            font-size: 3.4rem;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1.0); /* Added text-shadow */
+        }
+
+        .home-text p {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 0.5rem 0 1.2rem;
+            color: white;
+            z-index: 1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 1.0); /* Added text-shadow */
+        }
+        /* -------------------- END -------------------- */
+
+
+        /* -------------------- Login button -------------------- */
+        .btn:hover {
+            background: var(--yellow);
+        }
+
+        /* Login form container */
+        #login-btn .btn {
+            margin-top: 0;
+            text-shadow: none;
+        }
+
+        #login-btn i {
+            display: none;
+            font-size: 2.5rem;
+            color: lightyellow;
+            text-shadow: none;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 0px;
+            padding: .8rem 3rem;
+            background: white;
+            color: black;
+            cursor: pointer;
+            font-size: 15px;
+            border-radius: .5rem;
+            font-weight: 500;
+            text-align: center;
+            text-shadow: none;
+        }
+
+        .header.active {
+            padding: 2rem 9%;
+            box-shadow: var(--box-shadow);
+        }
+
+        .loginAlert {
+            width: 100%;
+            padding: 1rem 2rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #ffffff;
+            border: none;
+            border-radius: var(--border-radius);
+            outline: none;
+            cursor: pointer;
+            background: green;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        /* -------------------- END -------------------- */
+
+        #menu-btn {
+            font-size: 2.5rem;
+            color: var(--light-color);
+            display: none;
+        }
+
+
+        /* -------------------- END -------------------- */
+
+        .btn {
+            display: inline-block;
+            margin-top: 0px;
+            padding: .8rem 3rem;
+            background: white;
+            color: black;
+            cursor: pointer;
+            font-size: 15px;
+            border-radius: .5rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        #menu-btn {
+            font-size: 2.5rem;
+            color: var(--light-color);
+            display: none;
+        }
+
+        .btnss {
+            display: inline-block;
+            margin-top: 0px;
+            padding: .8rem 3rem;
+            background: var(--green);
+            color: black;
+            cursor: pointer;
+            font-size: 15px;
+            border-radius: .5rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+            .btnss:hover {
+                background: var(--color-primary-dark);
+            }
+
+        .btn:hover {
+            background: turquoise;
+        }
+
+        .btns {
+            display: inline-block;
+            margin-top: 1rem;
+            border-radius: 5rem;
+            background: #333;
+            color: #fff;
+            padding: .6rem 2.5rem;
+            cursor: pointer;
+            font-size: 1.3rem;
+        }
+
+            .btns:hover {
+                background: var(--pink);
+            }
+        /* -------------------- About Us -------------------- */
+        .about .row {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding: 2rem 0;
+            padding-bottom: 3rem;
+        }
+
+            .about .row .video-container {
+                flex: 1 1 40rem;
+                position: relative;
+            }
+
+                .about .row .video-container video {
+                    width: 100%;
+                    border: 1.5rem solid var(--black);
+                    border-radius: 1rem;
+                    box-shadow: 0 .5rem 1rem rgba(0,0,0,.1);
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+                .about .row .video-container h3 {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(200%);
+                    font-size: 2rem;
+                    background: #fff;
+                    width: 100%;
+                    padding: 0.4rem 0.8rem;
+                    text-align: center;
+                    mix-blend-mode: screen;
+                }
+
+            .about .row .content {
+                flex: 1 1 40rem;
+            }
+
+                .about .row .content h3 {
+                    font-size: 2.5rem;
+                    color: #333;
+                }
+
+                .about .row .content p {
+                    font-size: 1.2rem;
+                    color: #999;
+                    padding: .5rem 0;
+                    padding-top: 1rem;
+                    line-height: 1.5;
+                }
+        /* -------------------- END -------------------- */
+        /* -------------------- Subscribe page -------------------- */
+        .newsletter {
+            background: url(https://images.pexels.com/photos/26173280/pexels-photo-26173280/free-photo-of-red-taxi-parked-on-the-side-of-a-road-in-hong-kong.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1) no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+            .newsletter form {
+                max-width: 35rem;
+                margin-left: auto;
+                text-align: center;
+                padding: 3rem 0;
+            }
+
+                .newsletter form h3 {
+                    font-size: 1.8rem;
+                    color: #fff;
+                    padding-bottom: .4rem;
+                    font-weight: normal;
+                }
+
+                .newsletter form .box {
+                    width: 100%;
+                    margin: .7rem 0;
+                    padding: 1rem 1.2rem;
+                    font-size: 1.2rem;
+                    color: var(--black);
+                    border-radius: .9rem;
+                    text-transform: none;
+                }
+        /* -------------------- END -------------------- */
+        /* -------------------- Contact us page -------------------- */
+        .contact .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+            .contact .row .map {
+                flex: 1 1 42rem;
+                width: 100%;
+                padding: 2rem;
+                box-shadow: var(--box-shadow);
+                border: var(--border);
+                border-radius: .5rem;
+                height: 50rem;
+            }
+
+            .contact .row form {
+                padding: 2rem;
+                flex: 1 1 42rem;
+                box-shadow: var(--box-shadow);
+                border: var(--border);
+                text-align: center;
+                border-radius: .5rem;
+            }
+
+                .contact .row form h3 {
+                    font-size: 3rem;
+                    color: var(--black);
+                    padding-bottom: 1rem;
+                }
+
+                .contact .row form .box {
+                    width: 100%;
+                    border-radius: .5rem;
+                    padding: 1rem 1.2rem;
+                    font-size: 1.6rem;
+                    text-transform: none;
+                    border: var(--border);
+                    margin: .7rem 0;
+                }
+
+                .contact .row form textarea {
+                    height: 15rem;
+                    resize: none;
+                }
+
+        .contactheadings {
+            padding-bottom: 2rem;
+            text-align: center;
+            font-size: 4.5rem;
+            color: var(--black);
+        }
+        /* -------------------- END -------------------- */
+        /* -------------------- Footer -------------------- */
+        .footer .box-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+            .footer .box-container .box {
+                flex: 1 1 25rem;
+            }
+
+                .footer .box-container .box h3 {
+                    color: #333;
+                    font-size: 2.5rem;
+                    padding: 1rem 0;
+                }
+
+                .footer .box-container .box a {
+                    display: block;
+                    color: #666;
+                    font-size: 1.5rem;
+                    padding: 1rem 0;
+                }
+
+                    .footer .box-container .box a:hover {
+                        color: var(--pink);
+                        text-decoration: underline;
+                    }
+
+                .footer .box-container .box img {
+                    margin-top: 1rem;
+                    width: 60%;
+                }
+
+        .inner-footer {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+        }
+
+        .social-links {
+            display: flex;
+        }
+
+            .social-links ul {
+                padding: 10px;
+                display: flex;
+                width: 400px;
+                height: 80px;
+                margin: auto;
+            }
+
+        .social-items {
+            list-style: none;
+        }
+
+            .social-items a {
+                padding: 10px 30px;
+                font-size: 40px;
+                color: white;
+            }
+
+                .social-items a:hover {
+                    color: red;
+                }
+
+        .outer-footer {
+            padding: 15px;
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            background-color: #191919;
+        }
+
+
+        /* -------------------- END -------------------- */
+
+        @media (max-width:1280px){
+    html{
+        font-size: 55%;
+    }
+    header{
+        padding:2rem;
+    }
+    section{
+        padding:2rem;
+    }
+    .home{
+        background-position: left;
+    }
+}
+@media (max-width: 1080px ) {
+    .container {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+}
+
+
+
+@media (max-width: 991px) {
+    .nav {
+        padding: 15px 20px;
+    }
+    section{
+        padding: 3rem 0 1rem;
+    }
+    .home.text {
+        padding-left: 2rem;
+    }
+    .home.text h1{
+        font-size: 2.1rem;
+    }
+
+}
+
+@media (max-width: 968px){
+    .nav {
+        padding: 10px 0;
+    }
+    #menu-icon {
+        display: initial;
+    }
+    .navbar {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        background: black;
+        row-gap: 0.5rem;
+        text-align: center;
+        box-shadow: 4px 4px 20px rgb(15 54 55 /20%);
+        clip-path: circle(0% at 0% 0%);
+        transition: 0.6s;
+    }
+    .navbar a {
+        display: block;
+        padding: 15px;
+    }
+    .navbar a:hover,
+    .navbar.active{
+        border-bottom: none;
+        background: black;
+        color: var(--bg-color);
+    }
+    .navbar.active{
+        clip-path: circle(144% at 0% 0%);
+    }
+    .blog-container .box {
+        padding: 4px;
+    }
+
+}
+
+@media (max-width: 360px) {
+    .home {
+        min-height: 500px;
+    }
+    .home-text h1{
+        font-size: 2rem;
+    }
+    .home-text p br{
+        display: contents;
+    }
+}
+
+@media (max-width: 968px) {
+
+
+    .section-3-wrapper{
+        flex-direction: column;
+
+    }
+
+    .feedback{
+        width: 350px;
+        height: 150px;
+        margin-top: 10px;
+    }
+    .feedback-desc{
+        width: 350px;
+        height: 140px;
+        font-size: 9.5px;
+        margin-right: 0px;
+        
+
+    }
+    .feedback-desc .far{
+
+        font-size: 25px;
+    }
+}
+
+
+
+@media (max-width:450px){
+    html{
+        font-size: 50%;
+    }
+    .heading{
+        font-size: 3rem;
+    }
+
+}
+    </style>
+</head>
+<body>
+    
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div> <!-- The navbar will be injected here -->
+
+
+    <section class="home" id="home">
+        <div class="home-text">
+            <h1 id="userName"></h1>
+            <h1> <b> Welcome to Uler Car Sharing </b></h1>
+            <h4><i> Car Sharing App for you to book cars at your own convenicence</i></h4>
+            <div class="login-register">
+                <a href="/bookings.html" class="btn btn-primary btn-lg">Book Now!</a>
+
+            </div>
+        </div>
+
+    </section>
+
+    <section class="about" id="about">
+        <h1 class="heading"> <span> About </span> Us </h1>
+
+        <div class="row">
+            <div class="video-container">
+                <video src="3657393-hd_1920_1080_24fps.mp4" loop autoplay muted></video>
+                <h3>Best Car Sharing Company</h3>
+            </div>
+
+            <div class="content">
+                <div id="headerWithLottie">
+                    <div id="lottieAnimation"></div>
+                    <h2>Why Choose Us?</h2>
+                    <lottie-player src="https://assets3.lottiefiles.com/temp/lf20_9gY9Yf.json"
+                                   background="transparent" speed="0.75" style="width: 50px; height: 50px;" loop autoplay>
+                    </lottie-player>
+                </div>
+                <h2>Welcome to Uler Car Sharing</h2>
+                <p>Experience the future of sustainable urban mobility with Uler. We are redefining how people move by offering affordable, accessible, and eco-friendly car-sharing solutions tailored to fit your lifestyle. Whether you're commuting to work, exploring the city, or planning a weekend getaway, Uler provides the perfect ride for every occasion.
+
+                    With our cutting-edge app, you can easily locate, book, and unlock cars with just a few taps. Our diverse fleet of vehicles ensures you always have the perfect match for your journey. Plus, our commitment to sustainability means every trip contributes to a greener planet.
+                    
+                    Discover the freedom and flexibility of car sharing today. Choose Uler—your partner for smarter, greener, and more convenient transportation.
+                    
+                    </p>
+                <a href="#" class="btns">Learn More</a>
+            </div>
+        </div>
+        </div>
+    </section>
+    <!-- about section ends -->
+   
+
+    <section class="newsletter">
+
+        <form onsubmit="sendNews(); reset(); return false;">
+            <h3>Subscribe For Latest News</h3>
+            <input type="email" id="newsEmail" placeholder="Enter Your Email" class="box">
+            <input type="submit" value="Subscribe" class="btns">
+        </form>
+
+    </section>
+
+    <!--- Contact us --->
+    <section class="contact" id="contact">
+
+        <h1 class="contactheadings"> Contact Us </h1>
+
+        <div class="row">
+            <iframe class=map src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.738442084811!2d103.77336167496571!3d1.3330862986542762!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31da107d8eb4e359%3A0x75d2e7ffdeeb0c43!2sNgee%20Ann%20Polytechnic!5e0!3m2!1sen!2ssg!4v1733395568829!5m2!1sen!2ssg" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+           
+            <form onsubmit="sendEmail(); reset(); return false;">
+                <h3>Message Us</h3>
+                <input type="text" id="name" placeholder="Enter Name" class="box" required>
+                <input type="email" id="email" placeholder="Enter Email" class="box" required>
+                <input type="text" id="subject" placeholder="Enter Subject" class="box" required>
+                <textarea id="message" placeholder="Enter Message" class="box" cols="30" rows="10" required></textarea>
+                <input type="submit" value="Send Message" class="btn">
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer section starts  -->
+    <section class="footer">
+
+        <div class="box-container">
+
+            <div class="box">
+                <h3>Quick Links</h3>
+                <a href="#home">Home</a>
+                <a href="#about">About Us</a>
+                <a href="#contact">Contact Us</a>
+            </div>
+
+            <div class="box">
+                <h3>Extra Links</h3>
+            </div>
+
+            <div class="box">
+                <h3>Locations</h3>
+                <a href="#">Singapore</a>
+            </div>
+
+            <div class="box">
+                <h3>Contact Info</h3>
+                <a href="#">+65 91234567</a>
+                <a href="#">Uler@gmail.com</a>
+                <a href="#">Singapore</a>
+                <img src="images/payment.png" alt="">
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="inner-footer">
+            <div class="social-links">
+                <ul>
+                    <li class="social-items"><a href=""><i class="fab fa-facebook"></i></a></li>
+                    <li class="social-items"><a href=""><i class="fab fa-instagram"></i></a></li>
+                    <li class="social-items"><a href=""><i class="fab fa-twitter"></i></a></li>
+                    <li class="social-items"><a href=""><i class="fab fa-youtube"></i></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="outer-footer">
+            Copyright &copy; Uler PTE LTD
+        </div>
+    </footer>
+    <!-- Footer section ends -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script>
+        loadNavbar();  // Load navbar dynamically
+        const userName = localStorage.getItem('userName');
+        const userID = localStorage.getItem('userID');
+        const jwtToken = localStorage.getItem('jwtToken');
+
+        if (userName && jwtToken) {
+            document.getElementById('userName').textContent = `Hello, ${userName}!`;
+            document.getElementById('jwtToken').textContent = jwtToken;
+        } else {
+            alert('User not logged in!');
+            window.location.href = "login.html";
+        }
+
+        // Load the navbar dynamically
+        async function loadNavbar() {
+            try {
+                const response = await fetch('navbar.html');
+                const navbarHTML = await response.text();
+                document.getElementById('navbar-container').innerHTML = navbarHTML;
+            } catch (error) {
+                console.error('Failed to load navbar:', error);
+            }
+        }
+        let header = document.querySelector("header");
+
+        window.addEventListener("scroll", () => {
+            header.classList.toggle("shadow", window.scrollY > 0);
+        });
+
+        let menu = document.querySelector(".navbar");
+
+        document.querySelector("#menu-icon").onclick = () => {
+            menu.classList.toggle("active");
+        };
+
+        /* remove shadow on scroll */
+        window.onscroll = () => {
+            menu.classList.remove("active");
+        };
+        /* Newsletter Subscribe send emails */
+        function sendNews() {
+
+    Email.send({
+        Host: "smtp.elasticemail.com",
+        Username: 'vernonkoh123@gmail.com',
+        Password: "F3067591595AB4C402CB0B5A3FF33C715A30",
+        To: document.getElementById("newsEmail").value,
+        From: 'vernonkoh123@gmail.com',
+        Subject: "Subscription on Updates of discounts",
+        Body: "Email: " + document.getElementById("newsEmail").value
+            + "<br> Message: We will update you on future news Thanks for Subscribing!! "
+
+    }).then(
+        message => alert("Message Sent Succesfully")
+    );
+    }
+    /* remove shadow on scroll */
+    window.onscroll = () => {
+            menu.classList.remove("active");
+        };
+        fetchUserMembershipBenefits();  // Fetch user membership benefits
+    </script>
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+</body>
+</html>

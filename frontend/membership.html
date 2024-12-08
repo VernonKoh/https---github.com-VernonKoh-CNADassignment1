@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Tiers</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .tier {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        .current-benefits {
+            margin-top: 20px;
+            border: 1px solid #007bff;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #e9f5ff;
+        }
+        .container {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div> <!-- The navbar will be injected here -->
+
+    <!-- Page Content -->
+    <div class="container">
+        <h1>Membership Tiers</h1>
+        <div id="tiers"></div>
+
+        <div id="currentBenefits" class="current-benefits">
+            <h2>Your Current Membership Benefits</h2>
+            <div id="benefitsDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        const userID = localStorage.getItem('userID'); // Retrieve the user ID
+        const jwtToken = localStorage.getItem('jwtToken'); // Retrieve JWT token
+
+        // Redirect to login if user is not logged in
+        if (!userID || !jwtToken) {
+            alert('User not logged in!');
+            window.location.href = 'login.html';
+        }
+
+        async function loadNavbar() {
+        try {
+            const response = await fetch('navbar.html');
+            const navbarHTML = await response.text();
+            console.log('Navbar HTML:', navbarHTML);  // Debug line
+            document.getElementById('navbar-container').innerHTML = navbarHTML;
+        } catch (error) {
+            console.error('Failed to load navbar:', error);
+        }
+    }
+        // Fetch all membership tiers
+        async function fetchMembershipTiers() {
+            try {
+                const response = await fetch("http://localhost:8081/api/v1/users/membership-tiers");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch membership tiers.");
+                }
+
+                const tiers = await response.json();
+                if (tiers.length === 0) {
+                    alert("No membership tiers available.");
+                    return;
+                }
+
+                const tiersContainer = document.getElementById('tiers');
+                tiersContainer.innerHTML = ''; // Clear existing content
+
+                tiers.forEach(tier => {
+                    const tierDiv = document.createElement('div');
+                    tierDiv.className = 'tier';
+                    tierDiv.innerHTML = `
+                        <h2>${tier.name}</h2>
+                        <p><strong>Hourly Rate Discount:</strong> ${tier.hourlyRateDiscount}%</p>
+                        <p><strong>Priority Access:</strong> ${tier.priorityAccess ? 'Yes' : 'No'}</p>
+                        <p><strong>Booking Limit:</strong> ${tier.bookingLimit}</p>
+                    `;
+                    tiersContainer.appendChild(tierDiv);
+                });
+            } catch (error) {
+                console.error('Error fetching membership tiers:', error);
+                alert('Failed to load membership tiers. Please try again.');
+            }
+        }
+
+        // Fetch the current membership benefits of the logged-in user
+        async function fetchUserMembershipBenefits() {
+            try {
+                const response = await fetch(`http://localhost:8081/api/v1/users/${userID}/membership-benefits`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!response.ok) throw new Error("Failed to fetch membership benefits.");
+
+                const benefits = await response.json();
+                const benefitsDetails = document.getElementById('benefitsDetails');
+                benefitsDetails.innerHTML = `
+                    <p><strong>Tier Name:</strong> ${benefits.tierName}</p>
+                    <p><strong>Hourly Rate Discount:</strong> ${benefits.hourlyRateDiscount}%</p>
+                    <p><strong>Priority Access:</strong> ${benefits.priorityAccess ? 'Yes' : 'No'}</p>
+                    <p><strong>Booking Limit:</strong> ${benefits.bookingLimit} bookings</p>
+                `;
+            } catch (error) {
+                console.error('Error fetching membership benefits:', error);
+                const benefitsDetails = document.getElementById('benefitsDetails');
+                benefitsDetails.textContent = 'Unable to load membership benefits. Please try again later.';
+            }
+        }
+
+        // Initialize the page
+        loadNavbar();
+        fetchMembershipTiers();
+        fetchUserMembershipBenefits();
+    </script>
+</body>
+</html>

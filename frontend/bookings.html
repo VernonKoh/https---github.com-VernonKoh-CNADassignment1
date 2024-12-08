@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Bookings</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .vehicle-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .modal-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        #conflictMessage {
+            display: none;
+        }
+        #currentReservations {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div> <!-- The navbar will be injected here -->
+
+    <!-- Page Content -->
+    <div class="container">
+        <h1>Vehicle Bookings</h1>
+        <div id="vehiclesList" class="mt-4"><p>Loading available vehicles...</p></div>
+    </div>
+
+    <!-- Modal for Booking -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingModalLabel">Book Vehicle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookingForm">
+                        <div class="mb-3">
+                            <label for="startTime" class="form-label">Start Time</label>
+                            <input type="datetime-local" id="startTime" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="endTime" class="form-label">End Time</label>
+                            <input type="datetime-local" id="endTime" class="form-control" required>
+                        </div>
+
+                        <!-- Conflict message area -->
+                        <div id="conflictMessage" class="alert alert-warning">
+                            <strong>Conflict detected!</strong> The selected time range overlaps with an existing booking.
+                            <p><strong>Conflicting booking:</strong> From <span id="conflictStartTime"></span> to <span id="conflictEndTime"></span></p>
+                            <p>Please select a different time slot.</p>
+                        </div>
+
+                        <!-- Current reservations list for the selected vehicle -->
+                        <div id="currentReservations">
+                            <h5>Current Reservations for this vehicle:</h5>
+                            <ul id="reservationsList" class="list-group">
+                                <li class="list-group-item">Loading current reservations...</li>
+                            </ul>
+                        </div>
+
+                        <!-- General error message -->
+                        <div id="errorMessage" class="text-danger mb-3" style="display: none;">
+                            Start time must be later than the current time and earlier than the end time.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Confirm Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userID = parseInt(localStorage.getItem('userID'), 10);
+        const jwtToken = localStorage.getItem('jwtToken');
+        let selectedVehicleId = null;
+
+        if (!userID || !jwtToken) {
+            alert('User not logged in!');
+            window.location.href = 'login.html';
+        }
+
+        // Load the navbar dynamically
+        async function loadNavbar() {
+            try {
+                const response = await fetch('navbar.html');
+                const navbarHTML = await response.text();
+                document.getElementById('navbar-container').innerHTML = navbarHTML;
+            } catch (error) {
+                console.error('Failed to load navbar:', error);
+            }
+        }
+
+        // Fetch available vehicles
+        async function fetchAvailableVehicles() {
+            try {
+                const response = await fetch('http://localhost:8082/api/v1/vehicles', {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                const vehicles = await response.json();
+
+                const vehiclesList = document.getElementById('vehiclesList');
+                if (response.ok) {
+                    vehiclesList.innerHTML = '';
+                    vehicles.forEach(vehicle => {
+                        const vehicleCard = document.createElement('div');
+                        vehicleCard.className = 'vehicle-card';
+                        vehicleCard.innerHTML = `
+                            <h5>${vehicle.make} ${vehicle.model}</h5>
+                            <p><strong>Registration:</strong> ${vehicle.registration_number}</p>
+                            <button class="btn btn-success" onclick="openBookingModal(${vehicle.id}, '${vehicle.make} ${vehicle.model}')">Book Now</button>
+                        `;
+                        vehiclesList.appendChild(vehicleCard);
+                    });
+                } else {
+                    vehiclesList.innerHTML = '<p>No vehicles available at the moment.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching vehicles:', error);
+                document.getElementById('vehiclesList').innerHTML = '<p>Failed to load vehicles. Please try again later.</p>';
+            }
+        }
+
+        // Fetch current reservations for the selected vehicle
+        async function fetchCurrentReservations(vehicleId) {
+            try {
+                const response = await fetch(`http://localhost:8082/api/v1/vehicles/${vehicleId}/bookings`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                const bookings = await response.json();
+
+                const reservationsList = document.getElementById('reservationsList');
+                if (response.ok && bookings.length > 0) {
+                    reservationsList.innerHTML = ''; // Clear loading text
+                    bookings.forEach(booking => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'list-group-item';
+                        listItem.innerHTML = `
+                            <strong>Start:</strong> ${new Date(booking.start_time).toLocaleString()} <br>
+                            <strong>End:</strong> ${new Date(booking.end_time).toLocaleString()} <br>
+                            <strong>Status:</strong> ${booking.status}
+                        `;
+                        reservationsList.appendChild(listItem);
+                    });
+                } else {
+                    reservationsList.innerHTML = '<li class="list-group-item">No current reservations.</li>';
+                }
+            } catch (error) {
+                console.error('Error fetching current reservations:', error);
+            }
+        }
+
+        // Open the booking modal and fetch current reservations
+        function openBookingModal(vehicleId, vehicleName) {
+            selectedVehicleId = vehicleId;
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('conflictMessage').style.display = 'none'; // Reset conflict message
+            const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            bookingModal.show();
+            fetchCurrentReservations(vehicleId); // Load current reservations for the selected vehicle
+        }
+
+        
+        // Refresh vehicle availability and reservations dynamically
+async function refreshBookingPage() {
+    // Fetch updated vehicle list
+    await fetchAvailableVehicles();
+
+    // Refresh reservations for the currently selected vehicle
+    if (selectedVehicleId) {
+        fetchCurrentReservations(selectedVehicleId);
+    }
+}
+
+// Reset the booking modal on close
+document.getElementById('bookingModal').addEventListener('hidden.bs.modal', () => {
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('conflictMessage').style.display = 'none';
+    document.getElementById('reservationsList').innerHTML = '<li class="list-group-item">Loading current reservations...</li>';
+    document.getElementById('startTime').value = '';
+    document.getElementById('endTime').value = '';
+});
+
+
+
+// Handle form submission for booking
+document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const startTime = new Date(document.getElementById('startTime').value);
+            const endTime = new Date(document.getElementById('endTime').value);
+            const now = new Date();
+
+            const errorMessage = document.getElementById('errorMessage');
+            const conflictMessage = document.getElementById('conflictMessage');
+            errorMessage.style.display = 'none';
+            conflictMessage.style.display = 'none'; // Reset conflict message
+
+            if (startTime <= now || startTime >= endTime) {
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8082/api/v1/vehicles/${selectedVehicleId}/book`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${jwtToken}`
+                    },
+                    body: JSON.stringify({
+                        user_id: userID,
+                        start_time: startTime.toISOString(),
+                        end_time: endTime.toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Booking successful!');
+                    const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+                    bookingModal.hide();
+                    fetchAvailableVehicles();
+                } else if (response.status === 409) {
+                    // Show conflict message inside the modal
+                    const errorData = await response.json();
+                    const conflictStart = new Date(errorData.conflict_start_time).toLocaleString();
+                    const conflictEnd = new Date(errorData.conflict_end_time).toLocaleString();
+
+                    document.getElementById('conflictStartTime').innerText = conflictStart;
+                    document.getElementById('conflictEndTime').innerText = conflictEnd;
+                    conflictMessage.style.display = 'block'; // Show conflict message
+                } else {
+                    alert('Booking failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error submitting booking:', error);
+            }
+        });
+        loadNavbar();  // Load the navbar into the page
+        fetchAvailableVehicles();  // Fetch available vehicles
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
