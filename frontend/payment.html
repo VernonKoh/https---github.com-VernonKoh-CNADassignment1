@@ -88,26 +88,19 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Pay Now</button>
         </form>
-        
 
-
-        <!-- Stripe Checkout -->
-        <div id="stripe-checkout">
-            <script src="https://js.stripe.com/v3/"></script>
-            <button id="checkout-button" class="btn btn-success w-100">Proceed to Checkout</button>
-        </div>
     </div>
 
     <script>
         const userID = localStorage.getItem('userID');
         const jwtToken = localStorage.getItem('jwtToken');
         let totalAmount = 0;
-
+    
         if (!userID || !jwtToken) {
             alert('User not logged in!');
             window.location.href = 'login.html';
         }
-
+    
         // Fetch billing details
         async function fetchBillingDetails() {
             try {
@@ -116,24 +109,24 @@
                         Authorization: `Bearer ${jwtToken}`
                     }
                 });
-
+    
                 const responseBody = await response.text();
                 console.log("Raw Response Body:", responseBody);
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP Status: ${response.status} - ${responseBody}`);
                 }
-
+    
                 const data = JSON.parse(responseBody);
-
+    
                 if (data.billing_details) {
                     totalAmount = data.total_cost;
                     document.getElementById('paymentAmount').value = `$${totalAmount.toFixed(2)}`;
-
+    
                     // Display membership tier and discount
                     document.getElementById('membership-tier').textContent = data.user_role;
                     document.getElementById('discount-amount').textContent = data.discount;
-
+    
                     const billingDetailsDiv = document.getElementById('billing-details');
                     const table = document.createElement('table');
                     table.classList.add('table', 'billing-table');
@@ -151,7 +144,7 @@
                         </thead>
                         <tbody>
                     `;
-
+    
                     data.billing_details.forEach(booking => {
                         tableHTML += `
                             <tr>
@@ -165,7 +158,7 @@
                             </tr>
                         `;
                     });
-
+    
                     tableHTML += `</tbody>`;
                     table.innerHTML = tableHTML;
                     billingDetailsDiv.innerHTML = '';
@@ -178,77 +171,72 @@
                 document.getElementById('billing-details').innerHTML = '<p>Failed to load billing details. Please try again later.</p>';
             }
         }
-
-        // Handle Stripe checkout
-        async function createCheckoutSession() {
-            const response = await fetch('http://localhost:8083/api/v1/payment/create-checkout-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${jwtToken}`
-                },
-                body: JSON.stringify({ amount: totalAmount * 100 }) // Convert to cents
-            });
-
-            const session = await response.json();
-            return session.id;
+    
+        // Ensure that bookingID is properly retrieved
+        function getBookingID() {
+            // Retrieve the booking ID from localStorage (ensure this value is set correctly)
+            const bookingID = localStorage.getItem('bookingID');
+    
+            if (!bookingID) {
+                console.error("Booking ID is missing or not found!");
+                alert("Booking ID is missing. Please try again.");
+                return null;
+            }
+    
+            return bookingID;
         }
+    
+        document.getElementById('payment-form').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Prevent form from submitting normally
+    
+            // Get payment amount, user ID, and booking ID
+            const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);  // Convert to float
+            const userID = parseInt(localStorage.getItem('userID'));  // Ensure userID is an integer
+            const jwtToken = localStorage.getItem('jwtToken');
+            const bookingID = parseInt(localStorage.getItem('bookingID'), 10); // Convert bookingID to integer
+    
+            // Debugging: Check the values in the console
+            console.log("userID:", userID);
+            console.log("jwtToken:", jwtToken);
+            console.log("bookingID:", bookingID);
+            console.log("paymentAmount:", paymentAmount);
+    
 
-        document.getElementById('checkout-button').addEventListener('click', async () => {
-            const sessionId = await createCheckoutSession();
-
-            const stripe = Stripe('your-public-stripe-key');
-            const { error } = await stripe.redirectToCheckout({ sessionId });
-
-            if (error) {
-                console.error('Error during checkout:', error);
+    
+            // Prepare payment data with user_id, amount, and booking_id
+            const paymentData = {
+                user_id: userID,         // Ensure this is passed as an integer
+                amount: paymentAmount,   // Payment amount as a float
+                payment_method: "Direct Payment",  // Placeholder for payment method
+                payment_status: "completed",  // Assuming payment is successful for now
+                booking_id: bookingID,   // Ensure this is an integer
+            };
+    
+            try {
+                const response = await fetch('http://localhost:8083/api/v1/payment/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`, // Pass the JWT token
+                    },
+                    body: JSON.stringify(paymentData), // Sending payment details to backend
+                });
+    
+                const result = await response.json();
+    
+                if (response.ok) {
+                    // If payment confirmed
+                    alert("Payment confirmed!");
+                    window.location.href = '/payment-confirmed.html'; // Redirect to payment confirmation page
+                } else {
+                    alert(`Payment failed: ${result.error || "Unknown error"}`);
+                }
+            } catch (error) {
+                console.error("Error during payment:", error);
+                alert("Failed to process payment. Please try again.");
             }
         });
-        document.getElementById('payment-form').addEventListener('submit', async function (e) {
-        e.preventDefault(); // Prevent form from submitting normally
-
-        // Get payment amount and user id
-        const paymentAmount = document.getElementById('paymentAmount').value;
-        const userID = localStorage.getItem('userID');
-        const jwtToken = localStorage.getItem('jwtToken');
-
-        if (!userID || !jwtToken) {
-            alert('User not logged in!');
-            window.location.href = 'login.html'; // Redirect if not logged in
-            return;
-        }
-
-        const paymentData = {
-            user_id: userID,
-            amount: paymentAmount,
-            payment_method: "Stripe", // Assuming using Stripe
-            payment_status: "pending", // Can be changed based on Stripe's response
-        };
-
-        try {
-            const response = await fetch('http://localhost:8083/api/v1/payment/confirm', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${jwtToken}`, // Ensure you are passing the JWT token
-                },
-                body: JSON.stringify(paymentData), // Sending payment details to backend
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                // If payment confirmed
-                alert("Payment confirmed!");
-                window.location.href = '/payment-confirmed.html'; // Redirect to payment confirmation page
-            } else {
-                alert(`Payment failed: ${result.error || "Unknown error"}`);
-            }
-        } catch (error) {
-            console.error("Error during payment:", error);
-            alert("Failed to process payment. Please try again.");
-        }
-    });
+    
         // Fetch billing details on page load
         fetchBillingDetails();
     </script>

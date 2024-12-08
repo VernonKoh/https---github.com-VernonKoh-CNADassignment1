@@ -160,15 +160,23 @@ func HandlePaymentConfirmation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate payment details
+	// Log the decoded payment details for debugging
+	log.Printf("Received payment details: %+v\n", paymentDetails)
+
 	if paymentDetails.Amount <= 0 {
 		http.Error(w, "Invalid payment amount", http.StatusBadRequest)
 		return
 	}
 
-	// Update payment status in the database
-	query := "UPDATE payments SET payment_status = 'paid' WHERE user_id = ? AND payment_status = 'pending'"
-	_, err := database.DB.Exec(query, paymentDetails.UserID)
+	// Ensure booking ID is valid and exists
+	if paymentDetails.BookingID == 0 {
+		http.Error(w, "Invalid booking ID", http.StatusBadRequest)
+		return
+	}
+
+	// Now you can process the payment
+	query := "UPDATE payments SET payment_status = 'paid' WHERE user_id = ? AND payment_status = 'pending' AND booking_id = ?"
+	_, err := database.DB.Exec(query, paymentDetails.UserID, paymentDetails.BookingID)
 	if err != nil {
 		http.Error(w, "Error updating payment status", http.StatusInternalServerError)
 		return
@@ -206,7 +214,7 @@ func HandlePaymentConfirmation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with success
+	// Respond to the client
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Payment confirmed and invoice sent via email.",
@@ -280,11 +288,19 @@ func ConfirmPayment(w http.ResponseWriter, r *http.Request) {
 
 // generateInvoice creates a new invoice in the existing table and returns the invoice ID.
 func generateInvoice(userID int, bookingID int, amount float64) int {
+	// Ensure the booking_id exists in the bookings table
+	var validBookingID int
+	err := database.DB.QueryRow("SELECT id FROM bookings WHERE id = ?", bookingID).Scan(&validBookingID)
+	if err != nil {
+		fmt.Printf("Invalid booking ID: %v\n", err)
+		return 0
+	}
+
+	// Insert invoice if booking ID is valid
 	query := `
         INSERT INTO invoices (user_id, booking_id, amount, payment_status, invoice_date)
         VALUES (?, ?, ?, 'Paid', ?)
     `
-	// Use the global DB initialized in the database package
 	result, err := database.DB.Exec(query, userID, bookingID, amount, time.Now())
 	if err != nil {
 		fmt.Printf("Error generating invoice: %v\n", err)
