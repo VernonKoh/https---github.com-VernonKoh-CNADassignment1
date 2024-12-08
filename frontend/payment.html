@@ -38,27 +38,7 @@
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="welcome.html">Home</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="update-profile.html">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="membership.html">Membership</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.html">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <div id="navbar-container"></div> <!-- This is where the navbar will be dynamically loaded -->
 
     <!-- Payment Section -->
     <div class="container">
@@ -92,15 +72,26 @@
     </div>
 
     <script>
+        // Function to dynamically load the navbar from the navbar.html file
+        async function loadNavbar() {
+            try {
+                const response = await fetch('navbar.html');
+                const navbarHTML = await response.text();
+                document.getElementById('navbar-container').innerHTML = navbarHTML;
+            } catch (error) {
+                console.error('Failed to load navbar:', error);
+            }
+        }
+
         const userID = localStorage.getItem('userID');
         const jwtToken = localStorage.getItem('jwtToken');
         let totalAmount = 0;
-    
+
         if (!userID || !jwtToken) {
             alert('User not logged in!');
             window.location.href = 'login.html';
         }
-    
+
         // Fetch billing details
         async function fetchBillingDetails() {
             try {
@@ -109,24 +100,24 @@
                         Authorization: `Bearer ${jwtToken}`
                     }
                 });
-    
+
                 const responseBody = await response.text();
                 console.log("Raw Response Body:", responseBody);
-    
+
                 if (!response.ok) {
                     throw new Error(`HTTP Status: ${response.status} - ${responseBody}`);
                 }
-    
+
                 const data = JSON.parse(responseBody);
-    
+
                 if (data.billing_details) {
                     totalAmount = data.total_cost;
                     document.getElementById('paymentAmount').value = `$${totalAmount.toFixed(2)}`;
-    
+
                     // Display membership tier and discount
                     document.getElementById('membership-tier').textContent = data.user_role;
                     document.getElementById('discount-amount').textContent = data.discount;
-    
+
                     const billingDetailsDiv = document.getElementById('billing-details');
                     const table = document.createElement('table');
                     table.classList.add('table', 'billing-table');
@@ -144,7 +135,7 @@
                         </thead>
                         <tbody>
                     `;
-    
+
                     data.billing_details.forEach(booking => {
                         tableHTML += `
                             <tr>
@@ -158,7 +149,7 @@
                             </tr>
                         `;
                     });
-    
+
                     tableHTML += `</tbody>`;
                     table.innerHTML = tableHTML;
                     billingDetailsDiv.innerHTML = '';
@@ -171,38 +162,38 @@
                 document.getElementById('billing-details').innerHTML = '<p>Failed to load billing details. Please try again later.</p>';
             }
         }
-    
+
         // Ensure that bookingID is properly retrieved
         function getBookingID() {
             // Retrieve the booking ID from localStorage (ensure this value is set correctly)
             const bookingID = localStorage.getItem('bookingID');
-    
+
             if (!bookingID) {
                 console.error("Booking ID is missing or not found!");
                 alert("Booking ID is missing. Please try again.");
                 return null;
             }
-    
+
             return bookingID;
         }
-    
+
         document.getElementById('payment-form').addEventListener('submit', async function (e) {
             e.preventDefault(); // Prevent form from submitting normally
-    
+
             // Get payment amount, user ID, and booking ID
             const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);  // Convert to float
             const userID = parseInt(localStorage.getItem('userID'));  // Ensure userID is an integer
             const jwtToken = localStorage.getItem('jwtToken');
             const bookingID = parseInt(localStorage.getItem('bookingID'), 10); // Convert bookingID to integer
-    
+
             // Debugging: Check the values in the console
             console.log("userID:", userID);
             console.log("jwtToken:", jwtToken);
             console.log("bookingID:", bookingID);
             console.log("paymentAmount:", paymentAmount);
-    
 
-    
+
+
             // Prepare payment data with user_id, amount, and booking_id
             const paymentData = {
                 user_id: userID,         // Ensure this is passed as an integer
@@ -211,7 +202,7 @@
                 payment_status: "completed",  // Assuming payment is successful for now
                 booking_id: bookingID,   // Ensure this is an integer
             };
-    
+
             try {
                 const response = await fetch('http://localhost:8083/api/v1/payment/confirm', {
                     method: 'POST',
@@ -221,9 +212,9 @@
                     },
                     body: JSON.stringify(paymentData), // Sending payment details to backend
                 });
-    
+
                 const result = await response.json();
-    
+
                 if (response.ok) {
                     // If payment confirmed
                     alert("Payment confirmed!");
@@ -236,9 +227,11 @@
                 alert("Failed to process payment. Please try again.");
             }
         });
-    
+
         // Fetch billing details on page load
         fetchBillingDetails();
+        loadNavbar(); // Load navbar dynamically
+
     </script>
 </body>
 
